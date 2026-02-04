@@ -11,7 +11,7 @@ export const AddTask = ({handleNewTaskAdded}) => {
     const addTask = async()=> {
         if(newTaskTitle.trim()){
             try {
-                await api.post("http://localhost:3000/api/tasks",
+                await api.post("/tasks",
                     {title: newTaskTitle});
                 toast.success(`Nhiệm vụ ${newTaskTitle} đã được thêm vào!`);
                 handleNewTaskAdded();
