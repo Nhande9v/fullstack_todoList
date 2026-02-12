@@ -19,10 +19,12 @@ const TaskCard = ({ task, index, handleTaskChanged }) => {
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().slice(0,16);
     };
+    const [isReminderActive, setIsReminderActive] = useState(false);
 
-const [reminderTime, setReminderTime] = useState(
+    const [reminderTime, setReminderTime] = useState(
   task.reminderAt ? formatDateTimeLocal(task.reminderAt) : ""
 );
+
 
     const playSound = () => {
     const audio = new Audio("/sounds/alert.mp3");
@@ -44,31 +46,33 @@ const [reminderTime, setReminderTime] = useState(
 
     //Nhắc nhở tự động
     useEffect(() => {
-  if (!task.reminderAt) return;
+    if (!task.reminderAt || !isReminderActive) return;
 
-  const delay = new Date(task.reminderAt).getTime() - Date.now();
-  if (delay <= 0) return;
+    const delay = new Date(task.reminderAt).getTime() - Date.now();
+    if (delay <= 0) return;
 
-  if (timerRef.current) {
-    clearTimeout(timerRef.current);
-  }
-
-  timerRef.current = setTimeout(() => {
-    playSound();
-
-    toast(`⏰ Reminder: ${task.title}`, {
-      description: "It's time to get to work!",
-    });
-
-    showDesktopNotification(task.title);
-  }, delay);
-
-  return () => {
     if (timerRef.current) {
-      clearTimeout(timerRef.current);
+        clearTimeout(timerRef.current);
     }
-  };
-}, [task._id, task.reminderAt]);
+
+    timerRef.current = setTimeout(() => {
+        playSound();
+
+        toast(`⏰ Reminder: ${task.title}`, {
+        description: "It's time to get to work!",
+        });
+
+        showDesktopNotification(task.title);
+
+        setIsReminderActive(false); // tránh kêu lại
+    }, delay);
+
+    return () => {
+        if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        }
+    };
+    }, [task.reminderAt, isReminderActive]);
     const setReminder = async () => {
     if (!reminderTime) return toast.error("Please choose a time");
 
@@ -79,6 +83,7 @@ const [reminderTime, setReminderTime] = useState(
         await api.put(`/tasks/${task._id}`, {
         reminderAt: new Date(reminderTime).toISOString()
         });
+        setIsReminderActive(true); 
 
         toast.success("Reminder set successfully!");
 
