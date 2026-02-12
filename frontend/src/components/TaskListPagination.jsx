@@ -16,7 +16,7 @@ export const TaskListPagination = ({handleNext, handlePrev,handlePageChange, pag
         const pages = [];
         if(totalPages<4){
             //hiện toàn bộ
-            for(let i = 1 ; i < totalPages; i++){
+            for(let i = 1 ; i <= totalPages; i++){
                 pages.push(i);
             }
         }else{
@@ -47,7 +47,7 @@ export const TaskListPagination = ({handleNext, handlePrev,handlePageChange, pag
         </PaginationItem>
 
           {pagesToShow.map((p,index)=>(
-            <PaginationItem>
+            <PaginationItem key = {index}>
                 {p ==="..." ? (<PaginationEllipsis/>): (
                     <PaginationLink
                     isActive={p === page}
@@ -55,8 +55,7 @@ export const TaskListPagination = ({handleNext, handlePrev,handlePageChange, pag
                         if(p!==page) handlePageChange(p);
                     }}
                     className="cursor-pointer"
-                    >
-                        {p}
+                    > {p}
                     </PaginationLink>
                 )}
             </PaginationItem>

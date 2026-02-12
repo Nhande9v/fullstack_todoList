@@ -1,5 +1,6 @@
-import express, { response } from 'express';
+import express from 'express';
 import tasksRouter from './routes/tasksRouters.js';
+import authsRouter from './routes/authRouters.js'
 import { connectDB } from './config/db.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -14,9 +15,12 @@ const app  = express();
 //middleware
 
 app.use(express.json());
-if(process.env.NODE_ENV !== "production"){
+// mới têm
+if(process.env.NODE_ENV === "production"){
     app.use(cors({origin:"http://localhost:5173"}));
 }
+
+app.use('/api/auth',authsRouter);
 
 app.use('/api/tasks', tasksRouter);
 
@@ -35,7 +39,3 @@ app.listen(PORT,()=>{
     console.log("server running.....");
 });
 });
-
-
-
-

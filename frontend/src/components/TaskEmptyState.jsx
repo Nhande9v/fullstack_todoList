@@ -10,10 +10,10 @@ const TaskEmptyState = ({filter}) => {
                 <div>
                     <h3 className="font-medium text-foreground">
                         {
-                            filter === "active"?'Không có nhiệm vụ đang làm.': filter ==="completed" ? 'Không có nhiệm vụ đã hoàn thành.': 'Không có nhiệm vụ nào.'
+                            filter === "active"?'No active tasks found.': filter ==="completed" ? 'No completed tasks yet.': 'No tasks available.'
                         }
                     </h3>
-                    <p className="text-sm text-muted-foreground">{filter ==='all'? "Thêm nhiệm vụ mới để bắt đầu!": `Chuyển sang "tất cả" để thấy những nhiệm vụ ${filter === "active" ? "đã hoàn thành" : "đang làm"}`}</p>
+                    <p className="text-sm text-muted-foreground">{filter ==='all'? "Add a new task to get started!": `Switch to "All" to see your ${filter === "active" ? "completed tasks" : "tasks"}`}</p>
                 </div>
             </div>
         </Card>

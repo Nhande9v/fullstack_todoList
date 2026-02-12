@@ -9,6 +9,8 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import { visibleTaskLimit } from "@/lib/data";
+import { useNavigate } from "react-router-dom";
+import { getGuestTasks } from "@/lib/guestTasks";
 
 const Homepage = () => {
     const [taskBuffer, setTaskBuffer] = useState([]);
@@ -17,6 +19,53 @@ const Homepage = () => {
     const [filter,setFilter] = useState('all');
     const [dateQuery, setDateQuery] = useState("today");
     const [page,setPage] = useState(1);
+    const navigate = useNavigate();
+
+  //nhắc nhở khi bạn dùng tap ngoài 
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    const unlock = () => {
+      const audio = new Audio("/sounds/alert.mp3");
+      audio.volume = 0;
+      audio.play().catch(() => {});
+      window.removeEventListener("click", unlock);
+    };
+
+    window.addEventListener("click", unlock);
+  }, []);
+
+  useEffect(() => {
+  const token = localStorage.getItem("token");
+
+  if (token) return;
+
+  if (!localStorage.getItem("guest_start")) {
+    localStorage.setItem("guest_start", Date.now());
+  }
+
+  const timer = setInterval(() => {
+    const start = localStorage.getItem("guest_start");
+    if (!start) return;
+
+    const diff = Date.now() - start;
+    const FIVE_MIN = 5* 60 * 1000;
+
+    if (diff > FIVE_MIN) {
+      localStorage.removeItem("guest_start");
+      localStorage.removeItem("guest_tasks");
+
+      toast.info("Guest session expired. Please sign up to save your data!");
+      window.location.reload();
+    }
+  }, 5000); // check mỗi 5s
+
+  return () => clearInterval(timer);
+}, []);
 
     useEffect(() => {
       fetchTasks();
@@ -27,16 +76,28 @@ const Homepage = () => {
     },[filter,dateQuery]);
 
     const fetchTasks = async () => {
-      try {
-        const res = await api.get(`/tasks?filter=${dateQuery}`);
-        setTaskBuffer(res.data.tasks);
-        setActiveTaskCount(res.data.activeCount);
-        setCompleteTaskCount(res.data.completeCount);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-        toast.error("Failed to fetch tasks.");
-      }
-    };
+  const token = localStorage.getItem("token");
+
+  // 👉 GUEST MODE
+  if (!token) {
+    const tasks = getGuestTasks();
+    setTaskBuffer(tasks);
+    setActiveTaskCount(tasks.filter(t => t.status === "active").length);
+    setCompleteTaskCount(tasks.filter(t => t.status === "completed").length);
+    return;
+  }
+
+  // 👉 LOGIN MODE
+  try {
+    const res = await api.get(`/tasks?filter=${dateQuery}`);
+    setTaskBuffer(res.data.tasks);
+    setActiveTaskCount(res.data.activeCount);
+    setCompleteTaskCount(res.data.completeCount);
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    toast.error("Failed to fetch tasks.");
+  }
+};
 
     const handleTaskChanged = () => {
       fetchTasks();
@@ -71,13 +132,10 @@ const Homepage = () => {
     });
 
     const visibileTasks = filteredTasks.slice(
-      (page-1)*visibleTaskLimit,
+      (page - 1)*visibleTaskLimit,
       page * visibleTaskLimit
     );
-    if (visibileTasks.length ===0){
-      handlePrev();
-    }
-    const totalPages = Math.ceil(filteredTasks.length/ visibleTaskLimit)
+    const totalPages = Math.ceil(filteredTasks.length/ visibleTaskLimit )
 
     return (
         <div className="min-h-screen w-full bg-[#f8fafc] relative">
@@ -116,7 +174,7 @@ const Homepage = () => {
                 />
 
                 {/* Danh sách nhiệm vụ */}
-                <TaskList fileteredTasks={filteredTasks} filter={filter}
+                <TaskList filteredTasks={visibileTasks} filter={filter}
                 handleTaskChanged={handleTaskChanged}
                 />
 
@@ -133,7 +191,7 @@ const Homepage = () => {
                 </div>
 
                 {/* Chân trang */}
-                <Footer completed TaskCount={completeTaskCount} activeTaskCount={activeTaskCount} />
+                <Footer completedTaskCount={completeTaskCount} activeTaskCount={activeTaskCount} />
             </div>
         </div>
 </div>

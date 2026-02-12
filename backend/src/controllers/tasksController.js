@@ -1,5 +1,5 @@
 import Task from "../models/Task.js";
-
+import mongoose from "mongoose";
 export const getAllTasks =async (req,res)=>{
     const {filter="today"} = req.query;
     const now = new Date();
@@ -7,7 +7,9 @@ export const getAllTasks =async (req,res)=>{
 
     switch (filter) {
         case "today":{
-            startDate = new Date(now.getFullYear(), now. getMonth(),now.getDate()); //2025-8-24 00:00
+            // startDate = new Date(now.getFullYear(), now. getMonth(),now.getDate()); //2025-8-24 00:00
+            startDate = new Date();
+            startDate.setHours(0,0,0,0);
             break;
         }
         case "week":{
@@ -25,9 +27,12 @@ export const getAllTasks =async (req,res)=>{
             }
     }
 
-    const query =startDate?{createdAt : { $gte: startDate }}:{};
-
-    try {
+    // const query =startDate?{createdAt : { $gte: startDate }}:{};
+        const query = {
+    ...(startDate && { createdAt: { $gte: startDate }}),
+    user: new mongoose.Types.ObjectId(req.user.id)     // LỌC THEO USER
+};
+    try {   
         const result = await Task.aggregate([
             {$match:query},
             {
@@ -51,8 +56,12 @@ export const getAllTasks =async (req,res)=>{
 };
 export const createTask = async (req,res)=>{
    try {
-    const {title} = req.body;
-    const task = new Task({title});
+    const {title, reminderAt} = req.body;
+    const task = new Task({
+        title,
+        reminderAt: reminderAt || null, 
+        user :req.user.id   //gắn user
+    });
     
     const newTask = await task.save();
     res.status(201).json(newTask);
@@ -63,10 +72,10 @@ export const createTask = async (req,res)=>{
 };
 export const updateTask = async (req,res)=>{
     try {
-        const {title, status, completedAt} = req.body;
+        const {title, status, completedAt, reminderAt} = req.body;
         const updatedTask = await Task.findByIdAndUpdate(
-            req.params.id,
-            {title, status, completedAt},
+            { _id: req.params.id, user: req.user.id },
+            {title, status, completedAt, reminderAt},
             {new:true}
         );
         if(!updatedTask){
@@ -80,7 +89,10 @@ export const updateTask = async (req,res)=>{
 };
 export const deleteTask = async (req,res)=>{
     try {
-        const deletedTask = await Task.findByIdAndDelete(req.params.id);
+        const deletedTask = await Task.findByIdAndDelete({
+            _id: req.params.id,
+            user: req.user.id
+        });
         if(!deletedTask){
             return res.status(404).json({message:"nhiệm vụ không tồn tại"});
         }

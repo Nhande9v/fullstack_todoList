@@ -8,15 +8,15 @@ export const Footer = ({completedTaskCount= 0, activeTaskCount= 0}) => {
                     {
                         completedTaskCount > 0 && (
                             <>
-                              Tuyệt vời! Bạn đã hoàn thành {completedTaskCount} việc
+                              Great job! {completedTaskCount} tasks done.
                               {
-                                activeTaskCount > 0 && `, còn ${activeTaskCount} việc dang dở thôi nhé! Cố lên!!!!`
+                                activeTaskCount > 0 && ` Just ${activeTaskCount} tasks left. You 've got this !!!!`
                               }
                             </>
                         )
                     }
                     {completedTaskCount === 0 && activeTaskCount > 0 && (
-                        <>Hãy bắt đầu làm {activeTaskCount} nhiệm vụ nào!!!</>
+                        <>You have {activeTaskCount} tasks to complete !!!</>
                     )}
                 </p>
             </div>

@@ -5,26 +5,44 @@ import { Button } from "./ui/button";
 import { Hand, Plus } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
+import { addGuestTask } from "@/lib/guestTasks";
 
 export const AddTask = ({handleNewTaskAdded}) => {
     const [newTaskTitle, setNewTaskTitle] = useState("");
-    const addTask = async()=> {
-        if(newTaskTitle.trim()){
-            try {
-                await api.post("/tasks",
-                    {title: newTaskTitle});
-                toast.success(`Nhiệm vụ ${newTaskTitle} đã được thêm vào!`);
-                handleNewTaskAdded();
-            } catch (error) {
-                console.error("Có lỗi xảy ra khi thêm nhiệm vụ!");
-                toast.error("Thêm nhiệm vụ thất bại. Vui lòng thử lại.");
-            }
-
-            setNewTaskTitle("");
-        }else{
-            toast.error("Tiêu đề nhiệm vụ không được để trống!");
+    const addTask = async () => {
+        if (!newTaskTitle.trim()) {
+            toast.error("Please enter a task title!");
+            return;
         }
-    };
+
+    const token = localStorage.getItem("token");
+
+  // Guest Mode
+        if (!token) {
+            addGuestTask({
+                id: Date.now().toString(),
+                title: newTaskTitle,
+                status: "active",
+                createdAt: new Date().toISOString(),
+            });
+
+        toast.success("Task added successfully! (Guest)");
+        handleNewTaskAdded();
+        setNewTaskTitle("");
+        return;
+        }
+
+  // 👉 LOGIN MODE
+    try {
+        await api.post("/tasks", { title: newTaskTitle });
+        toast.success(`Task added successfully!`);
+        handleNewTaskAdded();
+        setNewTaskTitle("");
+    } catch (error) {
+        console.error("Add task error:", error);
+        toast.error("Could not add task!");
+  }
+};
 
     //Thêm cách 2
     const handleKeyPress = (event) => {
