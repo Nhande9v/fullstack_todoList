@@ -21,9 +21,13 @@ const TaskCard = ({ task, index, handleTaskChanged }) => {
     };
     const [isReminderActive, setIsReminderActive] = useState(false);
 
-    const [reminderTime, setReminderTime] = useState(
-  task.reminderAt ? formatDateTimeLocal(task.reminderAt) : ""
-);
+    const [date, setDate] = useState(
+    task.reminderAt ? formatDateTimeLocal(task.reminderAt).slice(0, 10) : ""
+    );
+
+    const [time, setTime] = useState(
+    task.reminderAt ? formatDateTimeLocal(task.reminderAt).slice(11, 16) : ""
+    );
 
 
     const playSound = () => {
@@ -73,26 +77,28 @@ const TaskCard = ({ task, index, handleTaskChanged }) => {
         }
     };
     }, [task.reminderAt, isReminderActive]);
-    const setReminder = async () => {
-    if (!reminderTime) return toast.error("Please choose a time");
+   const setReminder = async () => {
+        if (!date || !time) return toast.error("Please choose date and time");
 
-    const delay = new Date(reminderTime).getTime() - Date.now();
-    if (delay <= 0) return toast.error("Please select a future date and time.");
+        const reminderTime = `${date}T${time}`;
+        const delay = new Date(reminderTime).getTime() - Date.now();
 
-    try {
-        await api.put(`/tasks/${task._id}`, {
-        reminderAt: new Date(reminderTime).toISOString()
-        });
-        setIsReminderActive(true); 
+        if (delay <= 0) return toast.error("Please select a future date and time.");
 
-        toast.success("Reminder set successfully!");
+        try {
+            await api.put(`/tasks/${task._id}`, {
+            reminderAt: new Date(reminderTime).toISOString()
+            });
 
-        handleTaskChanged();   // reload task → useEffect tự schedule
+            setIsReminderActive(true);
 
-    } catch (err) {
-        toast.error("Error occurred while setting the reminder.");
-    }
-    };
+            toast.success("Reminder set successfully!");
+            handleTaskChanged();
+
+        } catch (err) {
+            toast.error("Error occurred while setting the reminder.");
+        }
+        };
 
     const deleteTask = async (taskId) => {
         try {
@@ -218,12 +224,21 @@ const TaskCard = ({ task, index, handleTaskChanged }) => {
                 <div className="flex items-center gap-2">
 
                     {/* Nhắc nhở */}
+                    <div className="flex gap-1">
                     <Input
-                    type="datetime-local"
-                    className="h-8 text-xs w-[165px] hidden lg:block"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
+                        type="date"
+                        className="h-8 text-xs"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
                     />
+
+                    <Input
+                        type="time"
+                        className="h-8 text-xs"
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                    />
+                    </div>
 
                     <Button
                     variant="ghost"
