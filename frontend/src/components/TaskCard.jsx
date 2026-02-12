@@ -161,7 +161,7 @@ const TaskCard = ({ task, index, handleTaskChanged }) => {
         )}
             style={{ animationDelay: `${index * 50}ms` }}
         >
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 {/*  nút tròn */}
                 <Button variant="ghost"
                     size="icon"
@@ -221,10 +221,10 @@ const TaskCard = ({ task, index, handleTaskChanged }) => {
                     </div>
                 </div>
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 justify-end">
 
                     {/* Nhắc nhở */}
-                    <div className="flex gap-1">
+                    <div className="flex flex-wrap gap-1">
                     <Input
                         type="date"
                         className="h-8 text-xs"
